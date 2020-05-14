@@ -44,13 +44,13 @@ BoxLayout:
                         size_hint: 0.3,.1
                         text: 'Show'
                         on_press:
-                            app.uiDict['screen_menu'].manager.transition.direction = 'right'
+                            app.uiDict['screen_menu'].manager.transition.direction = 'up'
                             app.uiDict['screen_menu'].manager.current = 'screen_show'
                     Button:
                         size_hint: 0.3,.1
                         text: 'Control'
                         on_press:
-                            app.uiDict['screen_menu'].manager.transition.direction = 'right'
+                            app.uiDict['screen_menu'].manager.transition.direction = 'left'
                             app.uiDict['screen_menu'].manager.current = 'screen_control'
     
         Screen:
@@ -82,6 +82,13 @@ BoxLayout:
                         height: max(self.minimum_height, self.parent.height)
                         readonly: True
                         text: ''
+                Button:
+                    text: 'Back to menu'
+                    size_hint:  1,.1
+                    on_press:
+                        app.uiDict['screen_show'].manager.transition.direction = 'down'
+                        app.uiDict['screen_show'].manager.current = 'screen_menu'
+                
         Screen:
             name: 'screen_serial'
             on_parent: app.uiDict['screen_serial'] = self
@@ -110,11 +117,19 @@ BoxLayout:
                     text: 'Back to menu'
                     size_hint:  1,.1
                     on_press:
-                        root.manager.transition.direction = 'right'
-                        root.manager.current = 'menu'
+                        app.uiDict['screen_serial'].manager.transition.direction = 'left'
+                        app.uiDict['screen_serial'].manager.current = 'screen_menu'
         Screen:
             name: 'screen_control'
             on_parent: app.uiDict['screen_control'] = self
+            BoxLayout:
+                orientation: 'vertical'
+                Button:
+                    text: 'Back to menu'
+                    size_hint:  1,.1
+                    on_press:
+                        app.uiDict['screen_control'].manager.transition.direction = 'right'
+                        app.uiDict['screen_control'].manager.current = 'screen_menu'
 
 '''
 
