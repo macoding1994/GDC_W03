@@ -1,3 +1,4 @@
+import os
 import sys
 sys.path.append('./')
 from kivy.app import App
@@ -7,13 +8,12 @@ from kivy.clock import mainthread
 from kivy.utils import platform
 import threading
 import sys
-
 if platform == 'android':
     from usb4a import usb
     from usbserial4a import serial4a
 else:
     from serial.tools import list_ports
-    from serial import Serial, SerialException
+    from serial import Serial
 
 kv = '''
 BoxLayout:
@@ -23,7 +23,7 @@ BoxLayout:
     Label:
         size_hint_y: None
         height: '50dp'
-        text: 'usbserial4a example'
+        text: 'SerialTools'
     
     ScreenManager:
         id: sm
@@ -130,8 +130,8 @@ BoxLayout:
                     on_press:
                         app.uiDict['screen_control'].manager.transition.direction = 'right'
                         app.uiDict['screen_control'].manager.current = 'screen_menu'
-
 '''
+
 
 class MainApp(App):
     def __init__(self, *args, **kwargs):
@@ -149,10 +149,12 @@ class MainApp(App):
         if self.serial_port:
             with self.port_thread_lock:
                 self.serial_port.close()
-        
+        self.uiDict['btn_connect'].text = 'connect'
+        self.serial_port = None
+        self.read_thread = None
+
     def on_btn_scan_release(self):
         self.device_name_list = []
-        
         if platform == 'android':
             usb_device_list = usb.get_usb_device_list()
             self.device_name_list = [
@@ -163,42 +165,46 @@ class MainApp(App):
             self.device_name_list = [port.device for port in usb_device_list]
 
         self.uiDict['Spinner_com'].values = self.device_name_list
-        
-    def on_btn_device_release(self):
-        device_name =  self.uiDict['Spinner_com'].text
-        device_baudrate =  self.uiDict['Spinner_baudrate'].text
 
-        if platform == 'android':
-            device = usb.get_usb_device(device_name)
-            if not device:
-                raise SerialException(
-                    "Device {} not present!".format(device_name)
+    def on_btn_device_release(self):
+        if self.uiDict['btn_connect'].text == 'disconnect':
+            self.on_stop()
+            return
+        device_name = self.uiDict['Spinner_com'].text
+        device_baudrate = self.uiDict['Spinner_baudrate'].text
+
+        try:
+            if platform == 'android':
+                device = usb.get_usb_device(device_name)
+                if not device:
+                    return
+                if not usb.has_usb_permission(device):
+                    usb.request_usb_permission(device)
+                    return
+                self.serial_port = serial4a.get_serial_port(
+                    device_name,
+                    device_baudrate,
+                    8,
+                    'N',
+                    1,
+                    timeout=1
                 )
-            if not usb.has_usb_permission(device):
-                usb.request_usb_permission(device)
-                return
-            self.serial_port = serial4a.get_serial_port(
-                device_name,
-                device_baudrate,
-                8,
-                'N',
-                1,
-                timeout=1
-            )
-        else:
-            self.serial_port = Serial(
-                device_name,
-                device_baudrate,
-                8,
-                'N',
-                1,
-                timeout=1
-            )
-        
+            else:
+                self.serial_port = Serial(
+                    device_name,
+                    device_baudrate,
+                    8,
+                    'N',
+                    1,
+                    timeout=1
+                )
+        except Exception as e:
+            return
         if self.serial_port.is_open and not self.read_thread:
-            self.read_thread = threading.Thread(target = self.read_msg_thread)
+            self.read_thread = threading.Thread(target=self.read_msg_thread)
             self.read_thread.start()
-        
+            self.uiDict['btn_connect'].text = 'disconnect'
+
         self.uiDict['sm'].current = 'screen_show'
 
     def on_btn_write_release(self):
@@ -215,7 +221,7 @@ class MainApp(App):
                 self.uiDict['txtInput_write'].text
             )
             self.uiDict['txtInput_write'].text = ''
-    
+
     def read_msg_thread(self):
         while True:
             try:
@@ -227,18 +233,16 @@ class MainApp(App):
                     )
                 if received_msg:
                     msg = bytes(received_msg).decode('utf8')
-                    print(msg)
                     self.display_received_msg(msg)
             except Exception as ex:
-                raise ex
-                
+                break
+
     @mainthread
     def display_received_msg(self, msg):
         self.uiDict['txtInput_read'].text += msg
+        if sys.getsizeof(self.uiDict['txtInput_read'].text) > 2000:
+            self.uiDict['txtInput_read'].text = ''
 
-    def on_btn_to_Screen(self):
-        pass
 
 if __name__ == '__main__':
     MainApp().run()
-
