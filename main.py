@@ -133,7 +133,8 @@ BoxLayout:
                 orientation: 'vertical'
                 Button:
                     text: 'Back to menu'
-                    size_hint:  1,.1
+                    size_hint_y: None
+                    height: '50dp'
                     on_press:
                         app.uiDict['screen_control'].manager.transition.direction = 'right'
                         app.uiDict['screen_control'].manager.current = 'screen_menu'
