@@ -98,24 +98,31 @@ BoxLayout:
                     spacing: 10
                     size_hint: 1,.3
                     Spinner:
-                        on_parent: app.uiDict['Spinner_com'] = self
-                        size_hint:  .3,.3
                         text: 'COM'
+                        on_parent: app.uiDict['Spinner_com'] = self
+                        size_hint_x: .3
+                        size_hint_y: None
+                        height: '50dp'     
                         on_release: app.on_btn_scan_release()
                     Spinner:
-                        on_parent: app.uiDict['Spinner_baudrate'] = self
-                        size_hint:  .3,.3
                         text: 'Baudrate'
+                        on_parent: app.uiDict['Spinner_baudrate'] = self
+                        size_hint_x: .3
+                        size_hint_y: None
+                        height: '50dp'     
                         values: '9600', '14400','57600','115200'
             
                     Button:
-                        on_parent: app.uiDict['btn_connect'] = self              
                         text: 'connect'
-                        size_hint:  .3,.3
+                        on_parent: app.uiDict['btn_connect'] = self              
+                        size_hint_x: .3
+                        size_hint_y: None
+                        height: '50dp'                        
                         on_press: app.on_btn_device_release()
                 Button:
                     text: 'Back to menu'
-                    size_hint:  1,.1
+                    size_hint_y: None
+                    height: '50dp'
                     on_press:
                         app.uiDict['screen_serial'].manager.transition.direction = 'left'
                         app.uiDict['screen_serial'].manager.current = 'screen_menu'
